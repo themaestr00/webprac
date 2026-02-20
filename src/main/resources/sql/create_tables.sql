@@ -1,10 +1,10 @@
-CREATE TABLE "MediaType"
+CREATE TABLE IF NOT EXISTS "MediaType"
 (
     "id"   SERIAL PRIMARY KEY,
     "name" TEXT
 );
 
-CREATE TABLE "Movie"
+CREATE TABLE IF NOT EXISTS "Movie"
 (
     "id"           SERIAL PRIMARY KEY,
     "name"         TEXT,
@@ -13,7 +13,7 @@ CREATE TABLE "Movie"
     "company"      TEXT
 );
 
-CREATE TABLE "Exemplar"
+CREATE TABLE IF NOT EXISTS "Exemplar"
 (
     "id"         SERIAL PRIMARY KEY,
     "movie_id"   INTEGER,
@@ -27,7 +27,7 @@ CREATE TABLE "Exemplar"
             REFERENCES "MediaType" ("id")
 );
 
-CREATE TABLE "Client"
+CREATE TABLE IF NOT EXISTS "Client"
 (
     "id"           SERIAL PRIMARY KEY,
     "full_name"    TEXT,
@@ -36,11 +36,12 @@ CREATE TABLE "Client"
     "image_path"   TEXT
 );
 
-CREATE TABLE "Transaction"
+CREATE TABLE IF NOT EXISTS "Transaction"
 (
     "id"          SERIAL PRIMARY KEY,
     "exemplar_id" INTEGER,
     "client_id"   INTEGER,
+    "time"        TIMESTAMPTZ,
     CONSTRAINT "FK_Transaction_exemplar_id"
         FOREIGN KEY ("exemplar_id")
             REFERENCES "Exemplar" ("id"),
