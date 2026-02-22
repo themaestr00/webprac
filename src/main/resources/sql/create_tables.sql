@@ -65,7 +65,3 @@ WHERE E.available = FALSE
                   WHERE T2.exemplar_id = E.id
                     AND T2.type = 'return'
                     AND T2.time > T.time);
-
-SELECT exemplar_id
-FROM "IssuedExemplars"
-WHERE client_id = 1;
