@@ -1,10 +1,10 @@
-CREATE TABLE IF NOT EXISTS "MediaType"
+CREATE TABLE IF NOT EXISTS MediaType
 (
     "id"   SERIAL PRIMARY KEY,
     "name" TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS "Movie"
+CREATE TABLE IF NOT EXISTS Movie
 (
     "id"           SERIAL PRIMARY KEY,
     "name"         TEXT NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS "Movie"
     "company"      TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS "Exemplar"
+CREATE TABLE IF NOT EXISTS Exemplar
 (
     "id"         SERIAL PRIMARY KEY,
     "movie_id"   INTEGER NOT NULL,
@@ -21,24 +21,30 @@ CREATE TABLE IF NOT EXISTS "Exemplar"
     "available"  BOOLEAN NOT NULL,
     CONSTRAINT "FK_Exemplar_movie_id"
         FOREIGN KEY ("movie_id")
-            REFERENCES "Movie" ("id"),
+            REFERENCES Movie ("id"),
     CONSTRAINT "FK_Exemplar_media_type"
         FOREIGN KEY ("media_type_id")
-            REFERENCES "MediaType" ("id")
+            REFERENCES MediaType ("id")
 );
 
-CREATE TABLE IF NOT EXISTS "Client"
+CREATE TABLE IF NOT EXISTS Client
 (
     "id"           SERIAL PRIMARY KEY,
     "full_name"    TEXT NOT NULL,
-    "address"      TEXT,
+    "address"      TEXT NOT NULL,
     "phone_number" TEXT NOT NULL,
-    "image_path"   TEXT
+    "image_path"   TEXT NOT NULL
 );
 
-CREATE TYPE transaction_type AS ENUM ('issue', 'return');
+DO $$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'transaction_type') THEN
+        CREATE TYPE transaction_type AS ENUM ('issue', 'return');
+    END IF;
+END
+$$;
 
-CREATE TABLE IF NOT EXISTS "Transaction"
+CREATE TABLE IF NOT EXISTS Transaction
 (
     "id"          SERIAL PRIMARY KEY,
     "exemplar_id" INTEGER NOT NULL,
@@ -47,21 +53,21 @@ CREATE TABLE IF NOT EXISTS "Transaction"
     "type"        transaction_type NOT NULL,
     CONSTRAINT "FK_Transaction_exemplar_id"
         FOREIGN KEY ("exemplar_id")
-            REFERENCES "Exemplar" ("id"),
+            REFERENCES Exemplar ("id"),
     CONSTRAINT "FK_Transaction_client_id"
         FOREIGN KEY ("client_id")
-            REFERENCES "Client" ("id")
+            REFERENCES Client ("id")
 );
 
-CREATE VIEW "IssuedExemplars" AS
+CREATE OR REPLACE VIEW IssuedExemplars AS
 SELECT C.id AS client_id, E.id AS exemplar_id
-FROM "Transaction" T
-         JOIN "Client" C on T.client_id = C.id
-         JOIN "Exemplar" E on T.exemplar_id = E.id
+FROM Transaction T
+         JOIN Client C on T.client_id = C.id
+         JOIN Exemplar E on T.exemplar_id = E.id
 WHERE E.available = FALSE
   AND T.type = 'issue'
   AND NOT EXISTS (SELECT 1
-                  FROM "Transaction" T2
+                  FROM Transaction T2
                   WHERE T2.exemplar_id = E.id
                     AND T2.type = 'return'
                     AND T2.time > T.time);
