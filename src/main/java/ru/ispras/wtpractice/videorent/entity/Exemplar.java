@@ -3,6 +3,7 @@ package ru.ispras.wtpractice.videorent.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table
@@ -11,6 +12,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@SQLRestriction("is_deleted = false")
 public class Exemplar {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,4 +28,7 @@ public class Exemplar {
 
     @Column(nullable = false, insertable = false)
     private Boolean available;
+
+    @Column(nullable = false, insertable = false)
+    private Boolean is_deleted;
 }
