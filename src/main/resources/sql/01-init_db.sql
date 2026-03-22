@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS movie
     "name"         TEXT                                        NOT NULL,
     "release_date" DATE CHECK ("release_date" >= '1900-01-01') NOT NULL,
     "director"     TEXT                                        NOT NULL,
-    "company"      TEXT                                        NOT NULL
+    "company"      TEXT                                        NOT NULL,
+    "is_deleted"   BOOLEAN                                     NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS exemplar
@@ -19,6 +20,7 @@ CREATE TABLE IF NOT EXISTS exemplar
     "movie_id"      BIGINT  NOT NULL,
     "media_type_id" BIGINT  NOT NULL,
     "available"     BOOLEAN NOT NULL DEFAULT TRUE,
+    "is_deleted"    BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT "FK_Exemplar_movie_id"
         FOREIGN KEY ("movie_id")
             REFERENCES movie ("id"),
@@ -34,6 +36,7 @@ CREATE TABLE IF NOT EXISTS client
     "address"      TEXT        NOT NULL,
     "phone_number" TEXT        NOT NULL,
     "image_path"   TEXT UNIQUE NOT NULL,
+    "is_deleted"   BOOLEAN     NOT NULL DEFAULT FALSE,
     UNIQUE ("full_name", "phone_number")
 );
 
@@ -80,8 +83,28 @@ CREATE OR REPLACE FUNCTION process_transaction_and_update_exemplar()
     RETURNS TRIGGER AS
 $$
 DECLARE
-    current_status BOOLEAN;
+    is_deleted_client   BOOLEAN;
+    is_deleted_exemplar BOOLEAN;
+    current_status      BOOLEAN;
 BEGIN
+    SELECT is_deleted
+    INTO is_deleted_client
+    FROM client
+    WHERE id = NEW.client_id;
+
+    IF is_deleted_client THEN
+        RAISE EXCEPTION 'Ошибка: Попытка совершить транзакцию с удаленным пользователем с ID %s', NEW.client_id;
+    END IF;
+
+    SELECT is_deleted
+    INTO is_deleted_exemplar
+    FROM exemplar
+    WHERE id = NEW.exemplar_id;
+
+    IF is_deleted_exemplar THEN
+        RAISE EXCEPTION 'Ошибка: Попытка совершить транзакцию с удаленным экземлпяром с ID %s', NEW.exemplar_id;
+    END IF;
+
     SELECT available
     INTO current_status
     FROM exemplar
@@ -112,3 +135,68 @@ CREATE TRIGGER trg_update_exemplar_availability
     ON transaction
     FOR EACH ROW
 EXECUTE FUNCTION process_transaction_and_update_exemplar();
+
+CREATE OR REPLACE FUNCTION check_client_deactivation()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    IF NEW.is_deleted = FALSE AND OLD.is_deleted = TRUE THEN
+        IF EXISTS (SELECT 1 FROM issued_exemplar WHERE client_id = OLD.id) THEN
+            RAISE EXCEPTION 'Ошибка: Невозможно удалить клиента (ID %), у него есть невозвращенные экземпляры!', OLD.id;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_client_deactivation
+    BEFORE UPDATE OF is_deleted
+    ON client
+    FOR EACH ROW
+EXECUTE FUNCTION check_client_deactivation();
+
+CREATE OR REPLACE FUNCTION check_exemplar_deactivation()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    IF NEW.is_deleted = FALSE AND OLD.is_deleted = TRUE THEN
+        IF OLD.available = FALSE THEN
+            RAISE EXCEPTION 'Ошибка: Невозможно списать экземпляр (ID %), так как он находится на руках у клиента!', OLD.id;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_exemplar_deactivation
+    BEFORE UPDATE OF is_deleted
+    ON exemplar
+    FOR EACH ROW
+EXECUTE FUNCTION check_exemplar_deactivation();
+
+CREATE OR REPLACE FUNCTION check_movie_deactivation()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    IF NEW.is_deleted = FALSE AND OLD.is_deleted = TRUE THEN
+        IF EXISTS (SELECT 1 FROM exemplar WHERE movie_id = OLD.id AND available = FALSE) THEN
+            RAISE EXCEPTION 'Ошибка: Невозможно удалить фильм (ID %), так как один или несколько его экземпляров выданы клиентам!', OLD.id;
+        END IF;
+
+        UPDATE exemplar
+        SET is_deleted = FALSE
+        WHERE movie_id = OLD.id
+          AND is_deleted = TRUE;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_movie_deactivation
+    BEFORE UPDATE OF is_deleted
+    ON movie
+    FOR EACH ROW
+EXECUTE FUNCTION check_movie_deactivation();
