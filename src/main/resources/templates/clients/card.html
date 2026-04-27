@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${client.fullName} + ' — Видеопрокат'">Клиент</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            height: 56px;
+        }
+        nav .logo { font-weight: 700; font-size: 1rem; color: #1a1a1a; text-decoration: none; }
+        nav a { font-size: .875rem; color: #555; text-decoration: none; }
+        nav a:hover { color: #1a1a1a; }
+        nav a.active { color: #1a1a1a; font-weight: 600; }
+
+        main { max-width: 960px; margin: 2.5rem auto; padding: 0 1.5rem; }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            font-size: .8rem;
+            color: #aaa;
+            margin-bottom: 1.25rem;
+        }
+        .breadcrumb a { color: #888; text-decoration: none; }
+        .breadcrumb a:hover { color: #1a1a1a; }
+
+        /* Шапка карточки */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.75rem;
+        }
+        .card-header-left { display: flex; align-items: center; gap: 1.25rem; }
+        .card-header h1 { font-size: 1.5rem; font-weight: 700; }
+        .card-header .subtitle { font-size: .875rem; color: #888; margin-top: .25rem; }
+
+        .client-photo {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #e5e5e5;
+            flex-shrink: 0;
+        }
+        .client-photo-placeholder {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            border: 1px solid #e5e5e5;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: #ccc;
+            flex-shrink: 0;
+        }
+
+        .actions { display: flex; gap: .5rem; }
+        .btn {
+            padding: .5rem 1.1rem;
+            border-radius: 7px;
+            font-size: .875rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid #e5e5e5;
+            background: #fff;
+            color: #1a1a1a;
+            cursor: pointer;
+        }
+        .btn:hover { background: #f5f5f5; }
+        .btn-danger { color: #c0392b; border-color: #e5e5e5; }
+        .btn-danger:hover { background: #fff5f5; border-color: #f5c6c6; }
+
+        /* Блок с данными */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .info-card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+        }
+        .info-card .label {
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #aaa;
+            margin-bottom: .35rem;
+        }
+        .info-card .value { font-size: .95rem; font-weight: 500; }
+
+        /* Секции */
+        .section { margin-bottom: 2rem; }
+        .section-title {
+            font-size: .875rem;
+            font-weight: 600;
+            margin-bottom: .75rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            font-size: .7rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: .875rem;
+        }
+        thead th {
+            text-align: left;
+            padding: .7rem 1rem;
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #aaa;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        tbody tr { border-bottom: 1px solid #f0f0f0; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #fafafa; }
+        tbody td { padding: .7rem 1rem; }
+
+        a.row-link { color: inherit; text-decoration: none; }
+        a.row-link:hover { text-decoration: underline; }
+
+        .badge {
+            display: inline-block;
+            padding: .15rem .55rem;
+            border-radius: 99px;
+            font-size: .72rem;
+            font-weight: 500;
+        }
+        .badge-issue     { background: #eef6ee; color: #2e7d32; }
+        .badge-returning { background: #fef3e2; color: #e65100; }
+
+        .empty-row td { text-align: center; color: #aaa; padding: 1.5rem; }
+
+        .btn-sm { padding: .3rem .75rem; border-radius: 6px; font-size: .78rem;
+                  font-weight: 500; border: 1px solid #e5e5e5; background: #fff;
+                  color: #1a1a1a; cursor: pointer; white-space: nowrap; }
+        .btn-sm:hover { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a class="logo" href="/">Видеопрокат</a>
+    <a href="/">Главная</a>
+    <a href="/clients" class="active">Клиенты</a>
+    <a href="/movies">Фильмы</a>
+    <a href="/issue">Выдача</a>
+</nav>
+
+<main>
+    <div class="breadcrumb">
+        <a href="/clients">Клиенты</a> / <span th:text="${client.fullName}"></span>
+    </div>
+
+    <div class="card-header">
+        <div class="card-header-left">
+            <!-- Фото если есть, иначе заглушка -->
+            <img class="client-photo"
+                 th:if="${client.imagePath != null and !client.imagePath.isBlank()}"
+                 th:src="${client.imagePath}"
+                 th:alt="${client.fullName}">
+            <div class="client-photo-placeholder"
+                 th:if="${client.imagePath == null or client.imagePath.isBlank()}">
+                👤
+            </div>
+            <div>
+                <h1 th:text="${client.fullName}">Имя клиента</h1>
+                <div class="subtitle" th:text="'ID: ' + ${client.id}"></div>
+            </div>
+        </div>
+        <div class="actions">
+            <a class="btn" th:href="@{/issue(clientId=${client.id})}">Выдать</a>
+            <a class="btn" th:href="@{/clients/{id}/edit(id=${client.id})}">Редактировать</a>
+            <form th:action="@{/clients/{id}/delete(id=${client.id})}" method="post"
+                  onsubmit="return confirm('Удалить клиента?')">
+                <button class="btn btn-danger" type="submit">Удалить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Данные клиента -->
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="label">Телефон</div>
+            <div class="value" th:text="${client.phoneNumber}">—</div>
+        </div>
+        <div class="info-card">
+            <div class="label">Адрес</div>
+            <div class="value" th:text="${client.address}">—</div>
+        </div>
+        <div class="info-card">
+            <div class="label">На руках</div>
+            <div class="value" th:text="${#lists.size(issuedExemplars)}">0</div>
+        </div>
+    </div>
+
+    <!-- Текущие выдачи -->
+    <div class="section">
+        <div class="section-title">Сейчас на руках</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Фильм</th>
+                    <th>Носитель</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="e : ${issuedExemplars}">
+                    <td>
+                        <a class="row-link"
+                           th:href="@{/movies/{id}(id=${e.movie.id})}"
+                           th:text="${e.movie.name}">
+                        </a>
+                    </td>
+                    <td th:text="${e.mediaType.name}"></td>
+                    <td>
+                        <form th:action="@{/return}" method="post">
+                            <input type="hidden" name="clientId"   th:value="${client.id}">
+                            <input type="hidden" name="exemplarId" th:value="${e.id}">
+                            <button class="btn btn-sm"
+                                    type="submit"
+                                    onclick="return confirm('Принять возврат?')">
+                                Вернуть
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr class="empty-row" th:if="${#lists.isEmpty(issuedExemplars)}">
+                    <td colspan="3">Ничего не выдано</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- История транзакций -->
+    <div class="section">
+        <div class="section-title">История</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Тип</th>
+                    <th>Фильм</th>
+                    <th>Носитель</th>
+                    <th>Дата</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="t : ${transactions}">
+                    <td>
+                        <span class="badge badge-issue"
+                              th:if="${t.type.name() == 'issue'}">Выдача</span>
+                        <span class="badge badge-returning"
+                              th:if="${t.type.name() == 'returning'}">Возврат</span>
+                    </td>
+                    <td>
+                        <a class="row-link"
+                           th:href="@{/movies/{id}(id=${t.exemplar.movie.id})}"
+                           th:text="${t.exemplar.movie.name}">
+                        </a>
+                    </td>
+                    <td th:text="${t.exemplar.mediaType.name}"></td>
+                    <td th:text="${#temporals.format(t.time, 'dd.MM.yyyy HH:mm')}"
+                        style="color:#aaa"></td>
+                </tr>
+                <tr class="empty-row" th:if="${#lists.isEmpty(transactions)}">
+                    <td colspan="4">Транзакций нет</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+</body>
+</html>

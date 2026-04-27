@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фильмы — Видеопрокат</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+               background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+
+        nav { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 0 2rem;
+              display: flex; align-items: center; gap: 2rem; height: 56px; }
+        nav .logo { font-weight: 700; font-size: 1rem; color: #1a1a1a; text-decoration: none; }
+        nav a { font-size: .875rem; color: #555; text-decoration: none; }
+        nav a:hover { color: #1a1a1a; }
+        nav a.active { color: #1a1a1a; font-weight: 600; }
+
+        main { max-width: 960px; margin: 2.5rem auto; padding: 0 1.5rem; }
+
+        .page-header { display: flex; justify-content: space-between;
+                       align-items: center; margin-bottom: 1.5rem; }
+        h1 { font-size: 1.5rem; font-weight: 700; }
+
+        .btn { padding: .55rem 1.25rem; border-radius: 7px; font-size: .875rem;
+               font-weight: 500; text-decoration: none; border: 1px solid #e5e5e5;
+               background: #fff; color: #1a1a1a; cursor: pointer; }
+        .btn:hover { background: #f5f5f5; }
+        .btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+        .btn-primary:hover { background: #333; }
+
+        .search-bar { display: flex; gap: .5rem; margin-bottom: 1.25rem; }
+        .search-bar input, .search-bar select {
+            padding: .5rem .875rem; border: 1px solid #e5e5e5; border-radius: 7px;
+            font-size: .875rem; background: #fff; color: #1a1a1a; outline: none; }
+        .search-bar input { flex: 1; }
+        .search-bar input:focus, .search-bar select:focus { border-color: #aaa; }
+
+        table { width: 100%; border-collapse: collapse; background: #fff;
+                border: 1px solid #e5e5e5; border-radius: 10px;
+                overflow: hidden; font-size: .875rem; }
+        thead th { text-align: left; padding: .75rem 1rem; font-size: .7rem;
+                   text-transform: uppercase; letter-spacing: .06em;
+                   color: #888; border-bottom: 1px solid #e5e5e5; }
+        tbody tr { border-bottom: 1px solid #f0f0f0; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #fafafa; }
+        tbody td { padding: .75rem 1rem; }
+
+        .movie-link { color: inherit; text-decoration: none; font-weight: 500; }
+        .movie-link:hover { text-decoration: underline; }
+        .muted { color: #888; }
+
+        .avail-badge { display: inline-flex; align-items: center; gap: .3rem;
+                       font-size: .8rem; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .dot-green { background: #4caf50; }
+        .dot-gray  { background: #ccc; }
+
+        .empty { padding: 3rem; text-align: center; color: #aaa; font-size: .875rem;
+                 background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a class="logo" href="/">Видеопрокат</a>
+    <a href="/">Главная</a>
+    <a href="/clients">Клиенты</a>
+    <a href="/movies" class="active">Фильмы</a>
+    <a href="/issue">Выдача</a>
+</nav>
+
+<main>
+    <div class="page-header">
+        <h1>Фильмы</h1>
+        <a class="btn btn-primary" href="/movies/new">+ Добавить фильм</a>
+    </div>
+
+    <form class="search-bar" method="get" action="/movies">
+        <input type="text" name="search" placeholder="Поиск..."
+               th:value="${search}">
+        <select name="by">
+            <option value="name"     th:selected="${by == 'name' or by == null}">По названию</option>
+            <option value="director" th:selected="${by == 'director'}">По режиссёру</option>
+            <option value="company"  th:selected="${by == 'company'}">По студии</option>
+        </select>
+        <button class="btn" type="submit">Найти</button>
+        <a class="btn" href="/movies">Сбросить</a>
+    </form>
+
+    <table th:if="${not #lists.isEmpty(movies)}">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Название</th>
+                <th>Режиссёр</th>
+                <th>Студия</th>
+                <th>Год</th>
+                <th>Доступно</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="movie : ${movies}">
+                <td th:text="${movie.id}" class="muted"></td>
+                <td>
+                    <a class="movie-link"
+                       th:href="@{/movies/{id}(id=${movie.id})}"
+                       th:text="${movie.name}">
+                    </a>
+                </td>
+                <td th:text="${movie.director}" class="muted"></td>
+                <td th:text="${movie.company}"  class="muted"></td>
+                <td th:text="${movie.releaseDate.year}" class="muted"></td>
+                <td>
+                    <!-- Счётчик доступных экземпляров подтянется когда добавим в модель -->
+                    <span class="avail-badge">
+                        <span class="dot dot-gray"></span> —
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="empty" th:if="${#lists.isEmpty(movies)}">
+        Фильмов не найдено
+    </div>
+</main>
+
+</body>
+</html>

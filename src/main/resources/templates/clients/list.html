@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Клиенты — Видеопрокат</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            height: 56px;
+        }
+        nav .logo { font-weight: 700; font-size: 1rem; color: #1a1a1a; text-decoration: none; }
+        nav a { font-size: .875rem; color: #555; text-decoration: none; }
+        nav a:hover { color: #1a1a1a; }
+        nav a.active { color: #1a1a1a; font-weight: 600; }
+
+        main { max-width: 960px; margin: 2.5rem auto; padding: 0 1.5rem; }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        h1 { font-size: 1.5rem; font-weight: 700; }
+
+        .btn {
+            padding: .55rem 1.25rem;
+            border-radius: 7px;
+            font-size: .875rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid #e5e5e5;
+            background: #fff;
+            color: #1a1a1a;
+            cursor: pointer;
+        }
+        .btn:hover { background: #f5f5f5; }
+        .btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+        .btn-primary:hover { background: #333; }
+
+        /* Поиск */
+        .search-bar {
+            display: flex;
+            gap: .5rem;
+            margin-bottom: 1.25rem;
+        }
+        .search-bar input, .search-bar select {
+            padding: .5rem .875rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 7px;
+            font-size: .875rem;
+            background: #fff;
+            color: #1a1a1a;
+            outline: none;
+        }
+        .search-bar input { flex: 1; }
+        .search-bar input:focus, .search-bar select:focus { border-color: #aaa; }
+
+        /* Таблица */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: .875rem;
+        }
+        thead th {
+            text-align: left;
+            padding: .75rem 1rem;
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #888;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        tbody tr { border-bottom: 1px solid #f0f0f0; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #fafafa; }
+        tbody td { padding: .75rem 1rem; }
+
+        .client-link { color: inherit; text-decoration: none; font-weight: 500; }
+        .client-link:hover { text-decoration: underline; }
+
+        .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            object-fit: cover; border: 1px solid #e5e5e5;
+            vertical-align: middle;
+        }
+        .avatar-placeholder {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f0f0f0; border: 1px solid #e5e5e5;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: .85rem; color: #ccc; vertical-align: middle;
+        }
+        .name-cell { display: flex; align-items: center; gap: .75rem; }
+
+        .count-badge {
+            display: inline-block;
+            background: #f0f0f0;
+            border-radius: 99px;
+            padding: .15rem .6rem;
+            font-size: .75rem;
+            color: #555;
+        }
+
+        .empty { padding: 3rem; text-align: center; color: #aaa; font-size: .875rem;
+                 background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a class="logo" href="/">Видеопрокат</a>
+    <a href="/">Главная</a>
+    <a href="/clients" class="active">Клиенты</a>
+    <a href="/movies">Фильмы</a>
+    <a href="/issue">Выдача</a>
+</nav>
+
+<main>
+    <div class="page-header">
+        <h1>Клиенты</h1>
+        <a class="btn btn-primary" href="/clients/new">+ Добавить клиента</a>
+    </div>
+
+    <!-- Поиск -->
+    <form class="search-bar" method="get" action="/clients">
+        <input type="text" name="search" placeholder="Поиск..."
+               th:value="${search}">
+        <select name="by">
+            <option value="name"    th:selected="${by == 'name'   or by == null}">По имени</option>
+            <option value="phone"   th:selected="${by == 'phone'}">По телефону</option>
+            <option value="address" th:selected="${by == 'address'}">По адресу</option>
+        </select>
+        <button class="btn" type="submit">Найти</button>
+        <a class="btn" href="/clients">Сбросить</a>
+    </form>
+
+    <!-- Таблица клиентов -->
+    <table th:if="${not #lists.isEmpty(clients)}">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Имя</th>
+                <th>Телефон</th>
+                <th>Адрес</th>
+                <th>На руках</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="client : ${clients}">
+                <td th:text="${client.id}" style="color:#aaa"></td>
+                <td>
+                    <div class="name-cell">
+                        <img class="avatar"
+                             th:if="${client.imagePath != null and !client.imagePath.isBlank()}"
+                             th:src="${client.imagePath}"
+                             th:alt="${client.fullName}">
+                        <span class="avatar-placeholder"
+                              th:if="${client.imagePath == null or client.imagePath.isBlank()}">
+                            👤
+                        </span>
+                        <a class="client-link"
+                           th:href="@{/clients/{id}(id=${client.id})}"
+                           th:text="${client.fullName}">
+                        </a>
+                    </div>
+                </td>
+                <td th:text="${client.phoneNumber}" style="color:#555"></td>
+                <td th:text="${client.address}" style="color:#555"></td>
+                <td>
+                    <span class="count-badge"
+                          th:text="${issuedCountMap[client.id] > 0} ? ${issuedCountMap[client.id]} : '—'">
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="empty" th:if="${#lists.isEmpty(clients)}">
+        Клиентов не найдено
+    </div>
+</main>
+
+</body>
+</html>

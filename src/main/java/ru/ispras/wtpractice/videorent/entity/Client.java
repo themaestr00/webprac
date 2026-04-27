@@ -2,6 +2,7 @@ package ru.ispras.wtpractice.videorent.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
@@ -17,6 +18,7 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor
 @AllArgsConstructor
 @SQLRestriction("is_deleted = false")
+@SQLDelete(sql = "UPDATE client SET is_deleted = true WHERE id = ?")
 public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,9 +33,9 @@ public class Client {
     @Column(nullable = false)
     private String phoneNumber;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String imagePath;
 
-    @Column(nullable = false, insertable = false)
+    @Column(nullable = false, insertable = false, updatable = false)
     private Boolean is_deleted;
 }

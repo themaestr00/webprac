@@ -29,7 +29,7 @@ public class Transaction {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @Column(nullable = false, insertable = false)
+    @Column(nullable = false, insertable = false, updatable = false)
     private OffsetDateTime time;
 
     @Enumerated(EnumType.STRING)

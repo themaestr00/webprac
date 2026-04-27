@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS client
     "full_name"    TEXT        NOT NULL,
     "address"      TEXT        NOT NULL,
     "phone_number" TEXT        NOT NULL,
-    "image_path"   TEXT UNIQUE NOT NULL,
+    "image_path"   TEXT        NOT NULL,
     "is_deleted"   BOOLEAN     NOT NULL DEFAULT FALSE,
     UNIQUE ("full_name", "phone_number")
 );
@@ -200,3 +200,63 @@ CREATE TRIGGER trg_check_movie_deactivation
     ON movie
     FOR EACH ROW
 EXECUTE FUNCTION check_movie_deactivation();
+
+CREATE OR REPLACE FUNCTION movie_deactivation()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    UPDATE movie
+    SET is_deleted = true
+    WHERE id = OLD.id;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_movie_deactivation ON movie;
+
+CREATE TRIGGER trg_movie_deactivation
+    BEFORE DELETE
+    ON movie
+    FOR EACH ROW
+EXECUTE FUNCTION movie_deactivation();
+
+CREATE OR REPLACE FUNCTION client_deactivation()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    UPDATE client
+    SET is_deleted = true
+    WHERE id = OLD.id;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_client_deactivation ON client;
+
+CREATE TRIGGER trg_client_deactivation
+    BEFORE DELETE
+    ON client
+    FOR EACH ROW
+EXECUTE FUNCTION client_deactivation();
+
+CREATE OR REPLACE FUNCTION exemplar_deactivation()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    UPDATE exemplar
+    SET is_deleted = true
+    WHERE id = OLD.id;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_exemplar_deactivation ON exemplar;
+
+CREATE TRIGGER trg_exemplar_deactivation
+    BEFORE DELETE
+    ON exemplar
+    FOR EACH ROW
+EXECUTE FUNCTION exemplar_deactivation();

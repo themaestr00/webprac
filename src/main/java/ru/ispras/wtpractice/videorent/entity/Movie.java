@@ -2,6 +2,7 @@ package ru.ispras.wtpractice.videorent.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @SQLRestriction("is_deleted = false")
+@SQLDelete(sql = "UPDATE movie SET is_deleted = true WHERE id = ?")
 public class Movie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +37,6 @@ public class Movie {
     @Column(nullable = false)
     private String company;
 
-    @Column(nullable = false, insertable = false)
+    @Column(nullable = false, insertable = false, updatable = false)
     private Boolean is_deleted;
 }
