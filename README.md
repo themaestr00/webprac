@@ -1,5 +1,17 @@
 # Видеопрокат: use cases и описание страниц
 
+## Внешний вид страниц
+
+<img width="1463" height="715" alt="изображение" src="https://github.com/user-attachments/assets/843d0b72-cd7a-4d71-835f-60381126d3bc" />
+<img width="1463" height="715" alt="изображение" src="https://github.com/user-attachments/assets/5c819269-6316-44b7-8b6a-42092d560638" />
+<img width="1463" height="715" alt="изображение" src="https://github.com/user-attachments/assets/0a684272-17ff-4761-b60f-2559a91f23a1" />
+<img width="1463" height="715" alt="изображение" src="https://github.com/user-attachments/assets/1cd47eb6-067a-43df-8245-e5593a7722e2" />
+<img width="1463" height="715" alt="изображение" src="https://github.com/user-attachments/assets/5753671f-ac60-4dd6-a686-c3451c78f631" />
+<img width="1463" height="715" alt="изображение" src="https://github.com/user-attachments/assets/e95a4a1b-8c0b-480f-b4ab-2dbc5702854c" />
+<img width="1463" height="715" alt="изображение" src="https://github.com/user-attachments/assets/73795955-fb6d-4381-b8a3-f3f8e7c7eb83" />
+
+
+
 ## 1. Схема навигации
 С каждой страницы можно попасть на главную
 ![img.png](docs/img.png)
