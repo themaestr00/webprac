@@ -8,6 +8,7 @@ import ru.ispras.wtpractice.videorent.dao.*;
 import ru.ispras.wtpractice.videorent.entity.Movie;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 @Controller
 @RequestMapping("/movies")
@@ -65,7 +66,13 @@ public class MovieController {
     }
 
     @PostMapping
-    public String create(@ModelAttribute Movie movie) {
+    public String create(@ModelAttribute Movie movie, Model model) {
+        if (hasInvalidMovieFields(movie)) {
+            model.addAttribute("movie", movie);
+            model.addAttribute("error", "Заполните название, режиссёра, студию и дату выхода не раньше 01.01.1900");
+            return "movies/form";
+        }
+
         movieDAO.save(movie);
         return "redirect:/movies/" + movie.getId();
     }
@@ -75,14 +82,26 @@ public class MovieController {
                          @RequestParam String name,
                          @RequestParam String director,
                          @RequestParam String company,
-                         @RequestParam LocalDate releaseDate) {
+                         @RequestParam String releaseDate,
+                         Model model) {
         Movie movie = movieDAO.findById(id)
                 .orElseThrow(() -> new RuntimeException("Movie not found: " + id));
 
         movie.setName(name);
         movie.setDirector(director);
         movie.setCompany(company);
-        movie.setReleaseDate(releaseDate);
+
+        try {
+            movie.setReleaseDate(LocalDate.parse(releaseDate));
+        } catch (DateTimeParseException ex) {
+            movie.setReleaseDate(null);
+        }
+
+        if (hasInvalidMovieFields(movie)) {
+            model.addAttribute("movie", movie);
+            model.addAttribute("error", "Заполните название, режиссёра, студию и дату выхода не раньше 01.01.1900");
+            return "movies/form";
+        }
 
         movieDAO.save(movie);
         return "redirect:/movies/" + id;
@@ -92,5 +111,17 @@ public class MovieController {
     public String delete(@PathVariable Long id) {
         movieDAO.deleteById(id);
         return "redirect:/movies";
+    }
+
+    private boolean hasInvalidMovieFields(Movie movie) {
+        return isBlank(movie.getName())
+                || isBlank(movie.getDirector())
+                || isBlank(movie.getCompany())
+                || movie.getReleaseDate() == null
+                || movie.getReleaseDate().isBefore(LocalDate.of(1900, 1, 1));
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

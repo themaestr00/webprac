@@ -27,6 +27,10 @@
         .form-card { background: #fff; border: 1px solid #e5e5e5;
                      border-radius: 12px; padding: 1.75rem; }
 
+        .alert { background: #fff5f5; border: 1px solid #f5c6c6;
+                 border-radius: 7px; color: #c0392b; font-size: .875rem;
+                 padding: .75rem 1rem; margin-bottom: 1rem; }
+
         .field { margin-bottom: 1.25rem; }
 
         label { display: block; font-size: .75rem; font-weight: 500;
@@ -73,6 +77,8 @@
     </div>
 
     <h1 th:text="${movie.id != null} ? 'Редактировать фильм' : 'Новый фильм'">Фильм</h1>
+
+    <div class="alert" th:if="${error != null}" th:text="${error}"></div>
 
     <form class="form-card"
           th:action="${movie.id != null}

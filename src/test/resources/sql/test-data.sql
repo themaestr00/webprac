@@ -1,3 +1,5 @@
+TRUNCATE TABLE "transaction", exemplar, client, movie, media_type RESTART IDENTITY CASCADE;
+
 INSERT INTO media_type (name)
 VALUES ('VHS'),
        ('DVD');
@@ -26,4 +28,3 @@ VALUES (1, 1, '2026-01-10T10:00:00+00:00', 'issue'),
        (2, 1, '2026-02-01T10:00:00+00:00', 'issue'),
        (3, 2, '2026-02-05T10:00:00+00:00', 'issue'),
        (3, 2, '2026-02-10T10:00:00+00:00', 'returning');
-

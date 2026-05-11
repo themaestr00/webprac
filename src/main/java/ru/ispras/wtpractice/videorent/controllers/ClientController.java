@@ -90,7 +90,14 @@ public class ClientController {
 
     @PostMapping
     public String create(@ModelAttribute Client client,
-                         @RequestParam("image") MultipartFile image) throws IOException {
+                         @RequestParam("image") MultipartFile image,
+                         Model model) throws IOException {
+        if (hasBlankClientFields(client) || image == null || image.isEmpty()) {
+            model.addAttribute("client", client);
+            model.addAttribute("error", "Заполните имя, телефон, адрес и загрузите фото клиента");
+            return "clients/form";
+        }
+
         client.setImagePath(saveImage(image, null));
         clientDAO.save(client);
         return "redirect:/clients/" + client.getId();
@@ -101,13 +108,20 @@ public class ClientController {
                          @RequestParam String fullName,
                          @RequestParam String phoneNumber,
                          @RequestParam String address,
-                         @RequestParam("image") MultipartFile image) throws IOException {
+                         @RequestParam("image") MultipartFile image,
+                         Model model) throws IOException {
         Client client = clientDAO.findById(id)
                 .orElseThrow(() -> new RuntimeException("Client not found: " + id));
 
         client.setFullName(fullName);
         client.setPhoneNumber(phoneNumber);
         client.setAddress(address);
+
+        if (hasBlankClientFields(client)) {
+            model.addAttribute("client", client);
+            model.addAttribute("error", "Заполните имя, телефон и адрес клиента");
+            return "clients/form";
+        }
 
         if (!image.isEmpty()) {
             client.setImagePath(saveImage(image, null));
@@ -121,6 +135,16 @@ public class ClientController {
     public String delete(@PathVariable Long id) {
         clientDAO.deleteById(id);
         return "redirect:/clients";
+    }
+
+    private boolean hasBlankClientFields(Client client) {
+        return isBlank(client.getFullName())
+                || isBlank(client.getPhoneNumber())
+                || isBlank(client.getAddress());
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private String saveImage(MultipartFile image, String fallback) throws IOException {
